@@ -1,0 +1,31 @@
+#!/bin/bash
+# set -x
+
+ls -al
+
+
+target_dir=videos
+
+[ -d $target_dir ] || mkdir $target_dir
+
+yuv_name=temp.yuv
+
+python3 ./unzip.py bs.zip
+
+chmod +x ./VVCDecoder_23.8
+
+lst=$(find . -name "*.bin"|sort)
+
+for l in $lst
+do
+
+	bn=$(basename $l .bin)
+	yuv_name="${target_dir}/${bn}.yuv"
+
+	echo $bn $dec
+
+	./VVCDecoder_23.8 -b $l -o $yuv_name --OutputBitDepth=8
+done
+
+
+ls -al ${target_dir}/*.yuv

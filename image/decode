@@ -1,0 +1,41 @@
+#!/bin/bash
+# set -x
+
+ls -al
+pip list
+
+
+target_dir=images
+
+[ -d $target_dir ] || mkdir $target_dir
+
+yuv_name=temp.yuv
+
+python3 ./unzip.py bs.zip
+
+chmod +x ./VVCDecoder_23.8
+
+lst=$(find . -name "*.bin"|sort)
+
+for l in $lst
+do
+
+	bn=$(basename $l .bin)
+	res=$(echo $bn|sed -Ee 's/.*___([0-9]+x[0-9]+)____/\1/g')
+	png=$(echo $bn|sed -Ee 's/___([0-9]+x[0-9]+)____//g')
+
+	png="${target_dir}/${png}.png"
+	echo $png $res
+
+
+	./VVCDecoder_23.8 -b $l -o $yuv_name
+	python3 ./yuv2rgb.py $yuv_name -s $res -o $png
+
+	rm $l
+done
+
+
+ls -al ${target_dir}/*.png
+
+
+rm *.yuv
