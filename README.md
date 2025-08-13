@@ -21,6 +21,8 @@ on PyTorch:
 800102672637.dkr.ecr.us-east-1.amazonaws.com/compression:gpu (GPU)
 ```
 
+The corresponding `Dockerfile`s can be found in the `docker/` directory.
+
 If you need significant changes to the environment your decoder runs in, please email the
 [CLIC mailing list](clic-list@googlegroups.com) and request a custom image. When doing so,
 please mention your team name and provide a Dockerfile.

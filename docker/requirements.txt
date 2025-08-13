@@ -1,0 +1,15 @@
+bitstring
+h5py
+ipython
+matplotlib
+numpy
+pandas
+pillow
+range-coder
+scikit-image
+scikit-learn
+scipy
+seaborn
+statsmodels
+torch
+torchvision

@@ -1,0 +1,35 @@
+FROM nvidia/cuda:12.9.0-runtime-ubuntu24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update
+RUN apt-get upgrade -y
+
+RUN apt-get install -y git curl
+RUN apt-get install -y libjpeg-dev libpng-dev
+RUN apt-get install -y ffmpeg
+RUN apt-get install -y python3.12 python3-pip python3-tk
+RUN apt-get install -y libopenblas-dev
+RUN apt-get install -y libopencv-dev python3-opencv
+RUN apt-get install -y libfreetype-dev
+RUN apt-get install -y libhdf5-dev
+RUN apt-get install -y cython3
+
+RUN rm /usr/lib/python3.12/EXTERNALLY-MANAGED
+
+WORKDIR /tmp
+COPY requirements.txt .
+COPY requirements2.txt .
+
+RUN pip3 install -r requirements.txt 
+
+# Install CUDA Toolkit for Docker in Docker
+RUN apt-get install -y wget
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin
+RUN mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600
+RUN wget https://developer.download.nvidia.com/compute/cuda/12.8.1/local_installers/cuda-repo-ubuntu2404-12-8-local_12.8.1-570.124.06-1_amd64.deb
+RUN dpkg -i cuda-repo-ubuntu2404-12-8-local_12.8.1-570.124.06-1_amd64.deb
+RUN cp /var/cuda-repo-ubuntu2404-12-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
+RUN apt-get update
+RUN apt-get -y install cuda-toolkit-12-8
