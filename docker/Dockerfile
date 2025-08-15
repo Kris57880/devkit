@@ -20,6 +20,5 @@ RUN rm /usr/lib/python3.12/EXTERNALLY-MANAGED
 
 WORKDIR /tmp
 COPY requirements.txt .
-# COPY requirements2.txt .
 
 RUN pip3 install -r requirements.txt --break-system-packages
