@@ -4,38 +4,69 @@
 ls -al
 pip list
 
-
 target_dir=images
 
 [ -d $target_dir ] || mkdir $target_dir
 
-yuv_name=temp.yuv
-
+# Extract bs.zip, which contains bitstream folder and extra_information.csv
 python3 ./unzip.py bs.zip
 
-chmod +x ./VVCDecoder_23.8
+# Check extracted file structure
+echo "Checking extracted files..."
+ls -la bitstream/
+ls -la extra_information.csv
 
-lst=$(find . -name "*.bin"|sort)
+# Dynamically read rate value from txt file
+rate_file=$(find . -name "*.txt" -type f | head -1)
+if [ -n "$rate_file" ]; then
+    rate_value=$(basename "$rate_file" .txt)
+    echo "Found rate file: $rate_file, rate value: $rate_value"
+else
+    echo "Warning: No rate file found, using default rate 0.075"
+    rate_value="0.075"
+fi
 
-for l in $lst
-do
+# Create temporary working directory in current directory
+temp_work_dir="$(pwd)/temp"
+mkdir -p "$temp_work_dir"
+echo "Working directory: $temp_work_dir"
 
-	bn=$(basename $l .bin)
-	res=$(echo $bn|sed -Ee 's/.*___([0-9]+x[0-9]+)____/\1/g')
-	png=$(echo $bn|sed -Ee 's/___([0-9]+x[0-9]+)____//g')
-
-	png="${target_dir}/${png}.png"
-	echo $png $res
-
-
-	./VVCDecoder_23.8 -b $l -o $yuv_name
-	python3 ./yuv2rgb.py $yuv_name -s $res -o $png
-
-	rm $l
-done
+# Copy necessary files to working directory
+mv bitstream "$temp_work_dir/bitstream"
+mv extra_information.csv "$temp_work_dir/extra_information.csv"
 
 
+# Change to BK-SDM directory and execute denim_for_submission.py
+cd ./BK-SDM/src
+
+# Execute denim_for_submission.py to process images
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
+python3 denim_for_submission.py \
+    -i $temp_work_dir \
+    -o $temp_work_dir/results \
+    --model_path nota-ai/bk-sdm-v2-base \
+    --guidance_scale 0 \
+    -r $rate_value \
+    --mode mpgd \
+    --grad_term_weight 0.01
+
+# Return to original directory
+cd ../../
+
+# Copy processed images to target directory
+if [ -d "$temp_work_dir/results/out" ]; then
+    cp $temp_work_dir/results/out/*.png $target_dir/
+    echo "Copied processed images to $target_dir/"
+else
+    echo "Error: No output images found in $temp_work_dir/results/out"
+fi
+
+# Clean up temporary files
+rm -rf "$temp_work_dir"
+# rm -rf bitstream
+# rm -f extra_information.csv
+rm -f *.txt  # Clean up rate files
+
+# Display final results
+echo "Final results:"
 ls -al ${target_dir}/*.png
-
-
-rm *.yuv
